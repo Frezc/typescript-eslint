@@ -540,4 +540,41 @@ describe('References:', () => {
       }),
     );
   });
+
+  describe('check type reference', () => {
+    it('test', () => {
+      const { scopeManager } = parseAndAnalyze(
+        `
+        @deco
+        class A {
+
+          @deco
+          proper: a.Foo;
+          set foo(@deco a: Type) {}
+
+          constructor(@dd foo: a.Foo) {}
+        }
+      `,
+        {
+          emitDecoratorMetadata: true,
+        },
+      );
+      const propertyTypeRef = scopeManager.scopes[1].references[1];
+      expect(propertyTypeRef.identifier.name).toBe('a');
+      expect(propertyTypeRef.isTypeReference).toBe(true);
+      expect(propertyTypeRef.isValueReference).toBe(true);
+
+      const setterParamTypeRef =
+        scopeManager.scopes[1].childScopes[0].references[0];
+      expect(setterParamTypeRef.identifier.name).toBe('Type');
+      expect(setterParamTypeRef.isTypeReference).toBe(true);
+      expect(setterParamTypeRef.isValueReference).toBe(false);
+
+      const funcParamTypeRef =
+        scopeManager.scopes[1].childScopes[1].references[0];
+      expect(funcParamTypeRef.identifier.name).toBe('a');
+      expect(funcParamTypeRef.isTypeReference).toBe(true);
+      expect(funcParamTypeRef.isValueReference).toBe(true);
+    });
+  });
 });
